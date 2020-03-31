@@ -17,6 +17,7 @@
     Note: Every compile time dependency will end up in the license book. Please
     declare only dependencies that are actually needed -->
     <skip-third-party-bom>false</skip-third-party-bom>
+    <third-party-bom-scopes>compile|provided</third-party-bom-scopes>
   </properties>
 
   <dependencies>
@@ -30,20 +31,6 @@
       <groupId>org.camunda.bpm</groupId>
       <artifactId>camunda-engine-rest-jaxrs2</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <!-- dependencies only used for assemblies should be scope provided -->
-    <dependency>
-      <groupId>org.camunda.bpm</groupId>
-      <artifactId>camunda-engine</artifactId>
-      <scope>provided</scope>
-    </dependency>
-
-    <!-- dependencies only used for assemblies should be scope provided -->
-    <dependency>
-      <groupId>org.camunda.commons</groupId>
-      <artifactId>camunda-commons-logging</artifactId>
       <scope>provided</scope>
     </dependency>
 
