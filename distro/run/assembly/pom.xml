@@ -18,8 +18,6 @@
     Note: Every compile time dependency will end up in the license book. Please
     declare only dependencies that are actually needed -->
     <skip-third-party-bom>false</skip-third-party-bom>
-    <!-- snakeyaml is in Spring Boot's runtime scope and then included in the assembly -->
-    <third-party-bom-scopes>compile|runtime</third-party-bom-scopes>
   </properties>
   
   <dependencies>
@@ -29,12 +27,26 @@
       <artifactId>camunda-bpm-run-modules-rest</artifactId>
       <version>${project.version}</version>
       <type>pom</type>
+      <exclusions>
+        <!-- do not add transitive dependencies to generated dependency list -->
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
       <groupId>org.camunda.bpm.run</groupId>
       <artifactId>camunda-bpm-run-core</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <!-- we consume an uberjar that contains all of its dependencies -->
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
