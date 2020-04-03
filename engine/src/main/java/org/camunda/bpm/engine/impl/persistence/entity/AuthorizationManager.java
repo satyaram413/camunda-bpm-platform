@@ -1077,4 +1077,12 @@ public class AuthorizationManager extends AbstractManager {
             new ListQueryParameterObject(parameters, 0, batchSize));
   }
 
+  public void deleteAuthorizationsByResourceIds(Resources resource,
+                                                List<String> processInstanceIds) {
+
+    processInstanceIds.forEach(processInstanceId ->
+        deleteAuthorizationsByResourceId(resource, processInstanceId));
+
+  }
+
 }
