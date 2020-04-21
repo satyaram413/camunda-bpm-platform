@@ -16,6 +16,7 @@
  */
 package org.camunda.bpm.engine.test.api.authorization.history;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.camunda.bpm.engine.authorization.Authorization.ANY;
 import static org.camunda.bpm.engine.authorization.Permissions.READ_HISTORY;
 import static org.camunda.bpm.engine.authorization.Resources.PROCESS_DEFINITION;
@@ -25,6 +26,9 @@ import java.util.List;
 
 import org.camunda.bpm.engine.AuthorizationException;
 import org.camunda.bpm.engine.ProcessEngineConfiguration;
+import org.camunda.bpm.engine.authorization.HistoricProcessInstancePermissions;
+import org.camunda.bpm.engine.authorization.ProcessDefinitionPermissions;
+import org.camunda.bpm.engine.authorization.Resources;
 import org.camunda.bpm.engine.history.HistoricJobLog;
 import org.camunda.bpm.engine.history.HistoricJobLogQuery;
 import org.camunda.bpm.engine.history.HistoricProcessInstance;
@@ -69,6 +73,7 @@ public class HistoricJobLogAuthorizationTest extends AuthorizationTest {
         return null;
       }
     });
+    processEngineConfiguration.setEnableHistoricInstancePermissions(false);
     deleteDeployment(deploymentId);
   }
 
@@ -361,6 +366,96 @@ public class HistoricJobLogAuthorizationTest extends AuthorizationTest {
 
     // then
     assertNotNull(stacktrace);
+  }
+
+  public void testCheckNonePermissionOnHistoricProcessInstance() {
+    // given
+    processEngineConfiguration.setEnableHistoricInstancePermissions(true);
+
+    disableAuthorization();
+    String processInstanceId = startProcessAndExecuteJob(ONE_INCIDENT_PROCESS_KEY)
+        .getProcessInstanceId();
+
+    createGrantAuthorization(Resources.HISTORIC_PROCESS_INSTANCE, processInstanceId, userId,
+        HistoricProcessInstancePermissions.NONE);
+
+    // when
+    List<HistoricJobLog> result = historyService.createHistoricJobLogQuery().list();
+
+    // then
+    assertThat(result.size()).isEqualTo(0);
+  }
+
+  public void testCheckReadPermissionOnHistoricProcessInstance() {
+    // given
+    processEngineConfiguration.setEnableHistoricInstancePermissions(true);
+
+    String processInstanceId = startProcessAndExecuteJob(ONE_INCIDENT_PROCESS_KEY)
+        .getProcessInstanceId();
+
+    createGrantAuthorization(Resources.HISTORIC_PROCESS_INSTANCE, processInstanceId, userId,
+        HistoricProcessInstancePermissions.READ);
+
+    // when
+    List<HistoricJobLog> result = historyService.createHistoricJobLogQuery().list();
+
+    // then
+    assertThat(result.size()).isEqualTo(4);
+  }
+
+  public void testCheckNoneOnHistoricProcessInstanceAndReadHistoryPermissionOnProcessDefinition() {
+    // given
+    processEngineConfiguration.setEnableHistoricInstancePermissions(true);
+
+    String processInstanceId = startProcessAndExecuteJob(ONE_INCIDENT_PROCESS_KEY)
+        .getProcessInstanceId();
+
+    createGrantAuthorization(Resources.HISTORIC_PROCESS_INSTANCE, processInstanceId, userId,
+        HistoricProcessInstancePermissions.NONE);
+    createGrantAuthorization(PROCESS_DEFINITION, ONE_INCIDENT_PROCESS_KEY, userId, READ_HISTORY);
+
+    // when
+    List<HistoricJobLog> result = historyService.createHistoricJobLogQuery().list();
+
+    // then
+    assertThat(result.size()).isEqualTo(4);
+  }
+
+  public void testCheckReadOnHistoricProcessInstanceAndNonePermissionOnProcessDefinition() {
+    // given
+    processEngineConfiguration.setEnableHistoricInstancePermissions(true);
+
+    String processInstanceId = startProcessAndExecuteJob(ONE_INCIDENT_PROCESS_KEY)
+        .getProcessInstanceId();
+
+    createGrantAuthorization(Resources.HISTORIC_PROCESS_INSTANCE, processInstanceId, userId,
+        HistoricProcessInstancePermissions.READ);
+    createGrantAuthorization(PROCESS_DEFINITION, ONE_INCIDENT_PROCESS_KEY, userId,
+        ProcessDefinitionPermissions.NONE);
+
+    // when
+    List<HistoricJobLog> result = historyService.createHistoricJobLogQuery().list();
+
+    // then
+    assertThat(result.size()).isEqualTo(4);
+  }
+
+  public void testHistoricProcessInstancePermissionsAuthorizationDisabled() {
+    // given
+    processEngineConfiguration.setEnableHistoricInstancePermissions(true);
+
+    String processInstanceId = startProcessAndExecuteJob(ONE_INCIDENT_PROCESS_KEY)
+        .getProcessInstanceId();
+
+    disableAuthorization();
+
+    // when
+    List<HistoricJobLog> result = historyService.createHistoricJobLogQuery()
+        .processInstanceId(processInstanceId)
+        .list();
+
+    // then
+    assertThat(result.size()).isEqualTo(4);
   }
 
   // helper ////////////////////////////////////////////////////////
